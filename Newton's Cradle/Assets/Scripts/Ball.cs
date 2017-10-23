@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
+using UnityEngine.UI;
 
 namespace PhysicsAssignments.Object
 {
@@ -10,6 +12,10 @@ namespace PhysicsAssignments.Object
         [Range(0.0f, 200f)]
         [SerializeField]
         float m_Mass = 10.0f;
+
+        [Header ("Initiation variables")]
+        [SerializeField]
+        Vector2 m_InitialForce = Vector2.zero;
 
         [Header("Physics variables")]
         [SerializeField]
@@ -31,6 +37,9 @@ namespace PhysicsAssignments.Object
 
         private Body m_Body;
         float m_Radius = 0.0f;
+        List<Ball> m_CollidedBalls = new List<Ball> ();
+        Text m_Text;
+        Spring m_Spring;
 
         #endregion
 
@@ -40,14 +49,30 @@ namespace PhysicsAssignments.Object
             m_Radius = GetComponent<SpriteRenderer> ().bounds.size.x / 2;
             m_Ground = m_Radius + 0.5f;
             m_Body = new Body(transform.position, Vector3.zero, Vector3.zero);
+            m_Text = GetComponentInChildren<Text> ();
+
+            if ( m_Text ) m_Text.text = m_Mass.ToString ();
+
+            if (m_UseSpringForce)
+            {
+                if (transform.parent) m_Spring = transform.parent.GetComponentInChildren<Spring> ();
+                if ( m_Spring ) m_Spring.K = -m_Mass;
+            }
+
+            AddForce (m_InitialForce);
+        }
+
+        private void LateUpdate ()
+        {
+            if ( m_CollidedBalls.Count > 0 ) m_CollidedBalls.Clear ();
         }
 
         public void UpdateGravity(Vector3 grav)
         {
             if ( m_UseGravity ) m_Body.Velocity += grav * Time.fixedDeltaTime;
 
-            m_Body.Acceleration *= 0.99f;
-            m_Body.Velocity *= 0.99f;
+            m_Body.Acceleration *= 0.999f;
+            m_Body.Velocity *= 0.999f;
         }
 
         public void CheckGround()
@@ -59,7 +84,6 @@ namespace PhysicsAssignments.Object
             }
             else if ( transform.position.y + m_Body.Velocity.y * Time.fixedDeltaTime < m_Ground && !m_HitGround )
             {
-
                 m_Body.Velocity = new Vector3 (m_Body.Velocity.x * 0.5f, m_Body.Velocity.y * -0.5f);
                 m_HitGround = true;
                 transform.position += m_Body.Velocity * Time.fixedDeltaTime;
@@ -73,13 +97,19 @@ namespace PhysicsAssignments.Object
             }
         }
 
-        public void CheckCollisions(Ball[] balls)
+        public void CheckCollisions(List<Ball> balls)
         {
-            for (int i = 0 ; i < balls.Length ; ++i )
+            for (int i = 0 ; i < balls.Count ; ++i )
             {
+                if ( !balls[i] ) break;
                 if ( balls[i] == this ) continue;
                 if ( ( (transform.position + Velocity * Time.fixedDeltaTime ) - (balls[i].transform.position + balls[i].Velocity * Time.fixedDeltaTime ) ).magnitude - balls[i].Radius < m_Radius )
                 {
+                    if ( Collided (balls[i]) ) return;
+
+                    AddToCollisions (balls[i]);
+                    balls[i].AddToCollisions (this);
+
                     Vector3 new1 = ( Velocity * ( Mass - balls[i].Mass ) + ( 2f * balls[i].Mass * balls[i].Velocity ) ) / ( Mass + balls[i].Mass );
                     Vector3 new2 = ( balls[i].Velocity * ( balls[i].Mass - Mass ) + ( 2f * Mass * Velocity ) ) / ( Mass + balls[i].Mass );
 
@@ -87,8 +117,24 @@ namespace PhysicsAssignments.Object
 
                     AddForce (new1);
                     balls[i].AddForce (new2);
+
+                    transform.position += new1 * Time.fixedDeltaTime;
+                    m_Body.Position = transform.position;
+
+                    balls[i].transform.position += new2 * Time.fixedDeltaTime;
+                    balls[i].m_Body.Position = balls[i].transform.position;
                 }
             }
+        }
+
+        public bool Collided(Ball ball)
+        {
+            return m_CollidedBalls.Contains (ball);
+        }
+
+        public void AddToCollisions(Ball ball)
+        {
+            m_CollidedBalls.Add (ball);
         }
 
         public void AddForce(Vector3 force)
@@ -116,6 +162,13 @@ namespace PhysicsAssignments.Object
             get { return m_Mass; }
         }
 
+        public void SetMass(float mass)
+        {
+            m_Mass = Mathf.Clamp (mass, 1f, 100f);
+            if ( m_Text ) m_Text.text = m_Mass.ToString ();
+            if ( m_Spring ) m_Spring.K = -m_Mass;
+        }
+
         public Vector3 Velocity
         {
             get { return m_Body.Velocity; }
@@ -136,7 +189,7 @@ namespace PhysicsAssignments.Object
         {
             if ( !m_UseSpringForce ) return;
 
-            m_Body.Velocity += f * 30f / m_Mass * Time.deltaTime; 
+            AddForce (f);
         }
 
         public bool UseGravity

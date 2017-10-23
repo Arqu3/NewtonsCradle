@@ -34,4 +34,10 @@ public class Spring : MonoBehaviour
             m_Balls[1].transform.position = m_Balls[1].transform.position + Vector3.ClampMagnitude (m_Balls[1].transform.position - m_Balls[0].transform.position, m_Distance);
         }
     }
+
+    public float K
+    {
+        get { return m_K; }
+        set { m_K = value; }
+    }
 }
