@@ -16,23 +16,20 @@ public class Spring : MonoBehaviour
         m_Distance = Vector2.Distance(m_Balls [0].transform.position, m_Balls [1].transform.position);
     }
 
-    public void UpdatePhysics(bool elastic)
+    public void UpdatePhysics()
     {
-        if (elastic)
-        {
-            var x = Vector2.Distance (m_Balls[0].transform.position, m_Balls[1].transform.position);
+        var x = Vector2.Distance (m_Balls[0].transform.position, m_Balls[1].transform.position);
 
-            var p1 = ( m_Balls[0].transform.position - m_Balls[1].transform.position ).normalized;
-            var p2 = ( m_Balls[1].transform.position - m_Balls[0].transform.position ).normalized;
-            var force1 = -m_K * ( x - m_Distance ) * ( p2 / x );// - 0.01f * (m_balls[0].getVelo() - m_balls[1].getVelo());
-            var force2 = -m_K * ( x - m_Distance ) * ( p1 / x );// - 0.01f * (m_balls[1].getVelo() - m_balls[0].getVelo());
-            m_Balls[0].AddSpringForce (force1);
-            m_Balls[1].AddSpringForce (force2);
-        }
-        else
-        {
-            m_Balls[1].transform.position = m_Balls[1].transform.position + Vector3.ClampMagnitude (m_Balls[1].transform.position - m_Balls[0].transform.position, m_Distance);
-        }
+        var p1 = ( m_Balls[0].transform.position - m_Balls[1].transform.position ).normalized;
+        var p2 = ( m_Balls[1].transform.position - m_Balls[0].transform.position ).normalized;
+
+        var x1 = ( x - m_Distance ) * ( p2 / x );
+        var x2 = ( x - m_Distance ) * ( p1 / x );
+
+        var force1 = -m_K * x1;
+        var force2 = -m_K * x2;
+        m_Balls[0].AddSpringForce (force1);
+        m_Balls[1].AddSpringForce (force2);
     }
 
     public float K

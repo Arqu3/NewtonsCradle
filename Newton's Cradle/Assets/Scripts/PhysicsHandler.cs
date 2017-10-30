@@ -14,12 +14,12 @@ namespace PhysicsAssignments.Handler
         [Header ("Physics settings")]
         [SerializeField]
         Vector3 m_Gravity = new Vector3 (0.0f, -9.82f, 0.0f);
-        [SerializeField]
-        bool m_ElasticSprings = true;
 
         [Header ("UI elements")]
         [SerializeField]
         Text m_HeaderText;
+        [SerializeField]
+        GameObject m_OutlineCircle;
 
         [Header ("Spawnable Prefabs")]
         [SerializeField]
@@ -46,6 +46,7 @@ namespace PhysicsAssignments.Handler
         {
             m_Balls = FindObjectsOfType<Ball> ().ToList ();
             m_Springs = FindObjectsOfType<Spring> ().ToList();
+            m_OutlineCircle.SetActive (false);
         }
 
         private void Update ()
@@ -53,11 +54,13 @@ namespace PhysicsAssignments.Handler
             if ( Input.GetKeyDown (KeyCode.Tab) ) PauseSimulation ();
             else if ( Input.GetKeyDown (KeyCode.Escape) ) Application.Quit ();
 
+            ActivateCircle (false);
+
             if ( m_Active ) return;
 
             if ( Input.GetKeyDown (KeyCode.Q) ) SpawnPrefab (m_Prefabs[0]);
-            else if ( Input.GetKeyDown (KeyCode.W) ) SpawnPrefab (m_Prefabs[1]);
-            else if ( Input.GetKeyDown (KeyCode.E) ) SpawnPrefab (m_Prefabs[2]);
+            //else if ( Input.GetKeyDown (KeyCode.W) ) SpawnPrefab (m_Prefabs[1]);
+            //else if ( Input.GetKeyDown (KeyCode.E) ) SpawnPrefab (m_Prefabs[2]);
 
             if ( Input.GetMouseButton (0) )
             {
@@ -80,9 +83,19 @@ namespace PhysicsAssignments.Handler
             }
             else if (m_SelectedBall)
             {
+                ActivateCircle (true);
+
                 if ( Input.GetKeyDown (KeyCode.Alpha1) ) m_SelectedBall.SetMass (m_SelectedBall.Mass - 1f);
                 else if ( Input.GetKeyDown (KeyCode.Alpha2) ) m_SelectedBall.SetMass (m_SelectedBall.Mass + 1f);
             }
+        }
+
+        void ActivateCircle(bool active)
+        {
+            if (m_SelectedBall) m_OutlineCircle.transform.position = m_SelectedBall.transform.position;
+
+            if ( m_OutlineCircle.activeSelf == active ) return;
+            m_OutlineCircle.SetActive (active);
         }
 
         void SpawnPrefab(GameObject gObj)
@@ -115,14 +128,13 @@ namespace PhysicsAssignments.Handler
                 m_Balls[i].UpdateGravity (m_Gravity);
                 m_Balls[i].CheckGround ();
                 m_Balls[i].CheckCollisions (m_Balls);
-
             }
 
             for (int i = 0 ; i < m_Springs.Count ; ++i )
             {
                 if ( !m_Springs[i] ) break;
                 if ( !m_Springs[i].gameObject.activeSelf ) continue;
-                m_Springs[i].UpdatePhysics (m_ElasticSprings);
+                m_Springs[i].UpdatePhysics ();
             }
         }
     }

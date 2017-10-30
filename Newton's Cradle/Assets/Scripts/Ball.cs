@@ -71,53 +71,63 @@ namespace PhysicsAssignments.Object
         {
             if ( m_UseGravity ) m_Body.Velocity += grav * Time.fixedDeltaTime;
 
-            m_Body.Acceleration *= 0.999f;
-            m_Body.Velocity *= 0.999f;
+            m_Body.Velocity *= 0.9935f;
         }
 
+        /// <summary>
+        /// Checks if a ball has touched the ground-plane
+        /// </summary>
         public void CheckGround()
         {
             if ( transform.position.y + m_Body.Velocity.y * Time.fixedDeltaTime > m_Ground )
             {
-                transform.position += m_Body.Velocity * Time.fixedDeltaTime;
+                //transform.position += m_Body.Velocity * Time.fixedDeltaTime;
                 m_HitGround = false;
             }
             else if ( transform.position.y + m_Body.Velocity.y * Time.fixedDeltaTime < m_Ground && !m_HitGround )
             {
                 m_Body.Velocity = new Vector3 (m_Body.Velocity.x * 0.5f, m_Body.Velocity.y * -0.5f);
                 m_HitGround = true;
-                transform.position += m_Body.Velocity * Time.fixedDeltaTime;
-                //if (m_body.Velocity.magnitude < 0.01f)
-                //{
-                //    m_body.Velocity = Vector3.zero;
-                //    transform.position = new Vector3(transform.position.x, m_ground);
-
-                //    m_body.Velocity += m_body.Acceleration * Time.fixedDeltaTime;
-                //}
             }
+            transform.position += m_Body.Velocity * Time.fixedDeltaTime;
+            m_Body.Position = transform.position;
         }
 
+        /// <summary>
+        /// Checks if this balls has collided with the specified balls this frame
+        /// </summary>
+        /// <param name="balls"></param>
         public void CheckCollisions(List<Ball> balls)
         {
             for (int i = 0 ; i < balls.Count ; ++i )
             {
                 if ( !balls[i] ) break;
                 if ( balls[i] == this ) continue;
+                //Range check
                 if ( ( (transform.position + Velocity * Time.fixedDeltaTime ) - (balls[i].transform.position + balls[i].Velocity * Time.fixedDeltaTime ) ).magnitude - balls[i].Radius < m_Radius )
                 {
-                    if ( Collided (balls[i]) ) return;
+                    //Skip if balls have already collided this frame
+                    if ( Collided (balls[i]) ) continue;
 
                     AddToCollisions (balls[i]);
                     balls[i].AddToCollisions (this);
 
+                    //Calculate new forces
                     Vector3 new1 = ( Velocity * ( Mass - balls[i].Mass ) + ( 2f * balls[i].Mass * balls[i].Velocity ) ) / ( Mass + balls[i].Mass );
                     Vector3 new2 = ( balls[i].Velocity * ( balls[i].Mass - Mass ) + ( 2f * Mass * Velocity ) ) / ( Mass + balls[i].Mass );
 
-                    if ( Vector3.Angle (new1, new2) < 90f ) new1 *= -1f;
+                    //Check if any of the new forces needs to be inverted to help avoid getting stuck in each other
+                    Vector3 pos = (transform.position + balls[i].transform.position) / 2.0f;
+                    bool angle1 = Vector3.Angle (new1, pos - transform.position) < 90.0f;
+                    bool angle2 = Vector3.Angle (new2, pos - balls[i].transform.position) < 90.0f;
+                    if ( angle1 && !angle2 ) new1 *= -1.0f;
+                    else if ( angle2 && !angle1 ) new2 *= -1.0f;
 
+                    //Add forces
                     AddForce (new1);
                     balls[i].AddForce (new2);
 
+                    //Offset balls to new position to help avoid colliding multiple times
                     transform.position += new1 * Time.fixedDeltaTime;
                     m_Body.Position = transform.position;
 
@@ -142,21 +152,6 @@ namespace PhysicsAssignments.Object
             m_Body.Velocity += force * 30f / m_Mass * Time.deltaTime;
         }
 
-        public void Activate()
-        {
-            if (m_Active) return;
-
-            m_Active = true;
-            m_ResetPos = transform.position;
-        }
-
-        public void Reset()
-        {
-            transform.position = m_ResetPos;
-            m_Body = new Body(transform.position, m_StartVelo, Vector3.zero);
-            m_Active = false;
-        }
-
         public float Mass
         {
             get { return m_Mass; }
@@ -172,17 +167,6 @@ namespace PhysicsAssignments.Object
         public Vector3 Velocity
         {
             get { return m_Body.Velocity; }
-        }
-
-        public void ToggleGravity()
-        {
-            m_UseGravity = !m_UseGravity;
-        }
-
-        public void SetStartVelo(Vector3 v)
-        {
-            m_Body.Velocity = v;
-            m_StartVelo = v;
         }
 
         public void AddSpringForce(Vector3 f)

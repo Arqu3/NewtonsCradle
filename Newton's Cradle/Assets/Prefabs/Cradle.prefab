@@ -1343,7 +1343,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Mass: 1
-  m_InitialForce: {x: -5, y: 0}
+  m_InitialForce: {x: -5.5, y: 1}
   m_UseGravity: 1
   m_UseSpringForce: 1
 --- !u!114 &114581208935460906
