@@ -59,8 +59,6 @@ namespace PhysicsAssignments.Handler
             if ( m_Active ) return;
 
             if ( Input.GetKeyDown (KeyCode.Q) ) SpawnPrefab (m_Prefabs[0]);
-            //else if ( Input.GetKeyDown (KeyCode.W) ) SpawnPrefab (m_Prefabs[1]);
-            //else if ( Input.GetKeyDown (KeyCode.E) ) SpawnPrefab (m_Prefabs[2]);
 
             if ( Input.GetMouseButton (0) )
             {
@@ -90,6 +88,10 @@ namespace PhysicsAssignments.Handler
             }
         }
 
+        /// <summary>
+        /// Updates the outline circle appearing when clicking a circle
+        /// </summary>
+        /// <param name="active"></param>
         void ActivateCircle(bool active)
         {
             if (m_SelectedBall) m_OutlineCircle.transform.position = m_SelectedBall.transform.position;
@@ -112,7 +114,7 @@ namespace PhysicsAssignments.Handler
         {
             m_Active = !m_Active;
             if ( m_Active ) m_SelectedBall = null;
-            m_HeaderText.text = m_Active ? "" : "PAUSED";
+            m_HeaderText.text = m_Active ? "TAB to pause" : "PAUSED";
         }
 
         private void FixedUpdate ()

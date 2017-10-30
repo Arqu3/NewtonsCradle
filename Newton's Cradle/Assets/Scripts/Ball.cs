@@ -67,6 +67,10 @@ namespace PhysicsAssignments.Object
             if ( m_CollidedBalls.Count > 0 ) m_CollidedBalls.Clear ();
         }
 
+        /// <summary>
+        /// Applies gravity to the ball's velocity
+        /// </summary>
+        /// <param name="grav"></param>
         public void UpdateGravity(Vector3 grav)
         {
             if ( m_UseGravity ) m_Body.Velocity += grav * Time.fixedDeltaTime;
@@ -107,31 +111,31 @@ namespace PhysicsAssignments.Object
                 if ( Collided (balls[i]) ) continue;
 
                 //Range check
-                if ( ( (transform.position + Velocity * Time.fixedDeltaTime ) - (balls[i].transform.position + balls[i].Velocity * Time.fixedDeltaTime ) ).magnitude - balls[i].Radius < m_Radius )
+                if ( ( (transform.position + Velocity * Time.fixedDeltaTime ) - (balls[i].transform.position + balls[i].Velocity * Time.fixedDeltaTime ) ).magnitude < m_Radius + balls[i].Radius )
                 {
                     AddToCollisions (balls[i]);
                     balls[i].AddToCollisions (this);
 
                     //Calculate new forces
-                    Vector3 new1 = ( Velocity * ( Mass - balls[i].Mass ) + ( 2f * balls[i].Mass * balls[i].Velocity ) ) / ( Mass + balls[i].Mass );
-                    Vector3 new2 = ( balls[i].Velocity * ( balls[i].Mass - Mass ) + ( 2f * Mass * Velocity ) ) / ( Mass + balls[i].Mass );
+                    Vector3 force1 = ( Velocity * ( Mass - balls[i].Mass ) + ( 2f * balls[i].Mass * balls[i].Velocity ) ) / ( Mass + balls[i].Mass );
+                    Vector3 force2 = ( balls[i].Velocity * ( balls[i].Mass - Mass ) + ( 2f * Mass * Velocity ) ) / ( Mass + balls[i].Mass );
 
                     //Check if any of the new forces needs to be inverted to help avoid getting stuck in each other
                     Vector3 pos = (transform.position + balls[i].transform.position) / 2.0f;
-                    bool angle1 = Vector3.Angle (new1, pos - transform.position) < 90.0f;
-                    bool angle2 = Vector3.Angle (new2, pos - balls[i].transform.position) < 90.0f;
-                    if ( angle1 && !angle2 ) new1 *= -1.0f;
-                    else if ( angle2 && !angle1 ) new2 *= -1.0f;
+                    bool angle1 = Vector3.Angle (force1, pos - transform.position) <= 90.0f;
+                    bool angle2 = Vector3.Angle (force2, pos - balls[i].transform.position) <= 90.0f;
+                    if ( angle1 && !angle2 ) force1 *= -1.0f;
+                    else if ( angle2 && !angle1 ) force2 *= -1.0f;
 
                     //Add forces
-                    AddForce (new1);
-                    balls[i].AddForce (new2);
+                    AddForce (force1);
+                    balls[i].AddForce (force2);
 
                     //Offset balls to new position to help avoid colliding multiple times
-                    transform.position += new1 * Time.fixedDeltaTime;
+                    transform.position += force1 * Time.fixedDeltaTime;
                     m_Body.Position = transform.position;
 
-                    balls[i].transform.position += new2 * Time.fixedDeltaTime;
+                    balls[i].transform.position += force2 * Time.fixedDeltaTime;
                     balls[i].m_Body.Position = balls[i].transform.position;
                 }
             }

@@ -26,7 +26,6 @@ namespace PhysicsAssignments.Utility
                 enabled = false;
                 return;
             }
-
         }
 
         void Update()
