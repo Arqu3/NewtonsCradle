@@ -103,12 +103,12 @@ namespace PhysicsAssignments.Object
             {
                 if ( !balls[i] ) break;
                 if ( balls[i] == this ) continue;
+                //Skip if balls have already collided this frame
+                if ( Collided (balls[i]) ) continue;
+
                 //Range check
                 if ( ( (transform.position + Velocity * Time.fixedDeltaTime ) - (balls[i].transform.position + balls[i].Velocity * Time.fixedDeltaTime ) ).magnitude - balls[i].Radius < m_Radius )
                 {
-                    //Skip if balls have already collided this frame
-                    if ( Collided (balls[i]) ) continue;
-
                     AddToCollisions (balls[i]);
                     balls[i].AddToCollisions (this);
 
