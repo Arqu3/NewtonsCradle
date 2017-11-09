@@ -59,7 +59,7 @@ namespace PhysicsAssignments.Object
                 if ( m_Spring ) m_Spring.K = -m_Mass;
             }
 
-            AddForce (m_InitialForce);
+            AddVelocity (m_InitialForce);
         }
 
         private void LateUpdate ()
@@ -75,7 +75,7 @@ namespace PhysicsAssignments.Object
         {
             if ( m_UseGravity ) m_Body.Velocity += grav * Time.fixedDeltaTime;
 
-            m_Body.Velocity *= 0.9935f;
+            m_Body.Velocity *= 0.985f;
         }
 
         /// <summary>
@@ -128,8 +128,8 @@ namespace PhysicsAssignments.Object
                     else if ( angle2 && !angle1 ) force2 *= -1.0f;
 
                     //Add forces
-                    AddForce (force1);
-                    balls[i].AddForce (force2);
+                    AddVelocity (force1);
+                    balls[i].AddVelocity (force2);
 
                     //Offset balls to new position to help avoid colliding multiple times
                     transform.position += force1 * Time.fixedDeltaTime;
@@ -151,9 +151,9 @@ namespace PhysicsAssignments.Object
             m_CollidedBalls.Add (ball);
         }
 
-        public void AddForce(Vector3 force)
+        public void AddVelocity(Vector3 vel)
         {
-            m_Body.Velocity += force * 30f / m_Mass * Time.deltaTime;
+            m_Body.Velocity += vel * 30f / m_Mass * Time.deltaTime;
         }
 
         public float Mass
@@ -173,11 +173,11 @@ namespace PhysicsAssignments.Object
             get { return m_Body.Velocity; }
         }
 
-        public void AddSpringForce(Vector3 f)
+        public void AddSpringVelocity(Vector3 f)
         {
             if ( !m_UseSpringForce ) return;
 
-            AddForce (f);
+            AddVelocity (f);
         }
 
         public bool UseGravity

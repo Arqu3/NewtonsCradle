@@ -23,13 +23,13 @@ public class Spring : MonoBehaviour
         var p1 = ( m_Balls[0].transform.position - m_Balls[1].transform.position ).normalized;
         var p2 = ( m_Balls[1].transform.position - m_Balls[0].transform.position ).normalized;
 
-        var x1 = ( x - m_Distance ) * ( p2 / x );
-        var x2 = ( x - m_Distance ) * ( p1 / x );
+        var x1 = ( x - m_Distance ) * p2;
+        var x2 = ( x - m_Distance ) * p1;
 
         var force1 = -m_K * x1;
         var force2 = -m_K * x2;
-        m_Balls[0].AddSpringForce (force1);
-        m_Balls[1].AddSpringForce (force2);
+        m_Balls[0].AddSpringVelocity (force1);
+        m_Balls[1].AddSpringVelocity (force2);
     }
 
     public float K
