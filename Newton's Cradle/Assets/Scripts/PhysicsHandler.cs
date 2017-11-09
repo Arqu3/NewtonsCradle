@@ -138,6 +138,15 @@ namespace PhysicsAssignments.Handler
                 if ( !m_Springs[i].gameObject.activeSelf ) continue;
                 m_Springs[i].UpdatePhysics ();
             }
+
+            for ( int i = 0 ; i < m_Balls.Count ; ++i )
+            {
+                if ( !m_Balls[i] ) break;
+                if ( !m_Balls[i].gameObject.activeSelf ) continue;
+                else if ( !m_Balls[i].UseGravity && !m_Balls[i].UseSpringForce ) continue;
+
+                m_Balls[i].UpdateVelocity ();
+            }
         }
     }
 }

@@ -29,6 +29,7 @@ namespace PhysicsAssignments.Object
 
         private Vector3 m_ResetPos;
         private Vector3 m_StartVelo;
+        Vector3 m_FrameVelocity = Vector3.zero;
 
         private bool m_HitGround = false;
         private bool m_Active = false;
@@ -59,7 +60,7 @@ namespace PhysicsAssignments.Object
                 if ( m_Spring ) m_Spring.K = -m_Mass;
             }
 
-            AddVelocity (m_InitialForce);
+            SetVelocity (m_InitialForce * 40.0f);
         }
 
         private void LateUpdate ()
@@ -73,9 +74,7 @@ namespace PhysicsAssignments.Object
         /// <param name="grav"></param>
         public void UpdateGravity(Vector3 grav)
         {
-            if ( m_UseGravity ) m_Body.Velocity += grav * Time.fixedDeltaTime;
-
-            m_Body.Velocity *= 0.985f;
+            if ( m_UseGravity ) m_FrameVelocity += grav * Time.fixedDeltaTime;
         }
 
         /// <summary>
@@ -83,14 +82,10 @@ namespace PhysicsAssignments.Object
         /// </summary>
         public void CheckGround()
         {
-            if ( transform.position.y + m_Body.Velocity.y * Time.fixedDeltaTime > m_Ground )
-            {
-                //transform.position += m_Body.Velocity * Time.fixedDeltaTime;
-                m_HitGround = false;
-            }
+            if ( transform.position.y + m_Body.Velocity.y * Time.fixedDeltaTime > m_Ground ) m_HitGround = false;
             else if ( transform.position.y + m_Body.Velocity.y * Time.fixedDeltaTime < m_Ground && !m_HitGround )
             {
-                m_Body.Velocity = new Vector3 (m_Body.Velocity.x * 0.5f, m_Body.Velocity.y * -0.5f);
+                m_FrameVelocity = new Vector3 (m_FrameVelocity.x * 0.5f, m_FrameVelocity.y * -0.5f);
                 m_HitGround = true;
             }
             transform.position += m_Body.Velocity * Time.fixedDeltaTime;
@@ -128,8 +123,8 @@ namespace PhysicsAssignments.Object
                     else if ( angle2 && !angle1 ) force2 *= -1.0f;
 
                     //Add forces
-                    AddVelocity (force1);
-                    balls[i].AddVelocity (force2);
+                    m_FrameVelocity += force1;
+                    balls[i].m_FrameVelocity += force2;
 
                     //Offset balls to new position to help avoid colliding multiple times
                     transform.position += force1 * Time.fixedDeltaTime;
@@ -139,6 +134,15 @@ namespace PhysicsAssignments.Object
                     balls[i].m_Body.Position = balls[i].transform.position;
                 }
             }
+        }
+
+        /// <summary>
+        /// Sets the end of frame velocity
+        /// </summary>
+        public void UpdateVelocity()
+        {
+            m_FrameVelocity *= 0.9895f;
+            SetVelocity (m_FrameVelocity);
         }
 
         public bool Collided(Ball ball)
@@ -151,9 +155,9 @@ namespace PhysicsAssignments.Object
             m_CollidedBalls.Add (ball);
         }
 
-        public void AddVelocity(Vector3 vel)
+        public void SetVelocity(Vector3 vel)
         {
-            m_Body.Velocity += vel * 30f / m_Mass * Time.deltaTime;
+            m_Body.Velocity = vel * 30f / m_Mass * Time.deltaTime;
         }
 
         public float Mass
@@ -176,8 +180,7 @@ namespace PhysicsAssignments.Object
         public void AddSpringVelocity(Vector3 f)
         {
             if ( !m_UseSpringForce ) return;
-
-            AddVelocity (f);
+            m_FrameVelocity += f;
         }
 
         public bool UseGravity

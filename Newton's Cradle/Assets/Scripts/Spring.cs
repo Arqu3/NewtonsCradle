@@ -9,11 +9,11 @@ public class Spring : MonoBehaviour
     [SerializeField]
     float m_K = -1f;
 
-    private float m_Distance = 1f;
+    private float m_RestingDistance = 1f;
 
     void Start()
     {
-        m_Distance = Vector2.Distance(m_Balls [0].transform.position, m_Balls [1].transform.position);
+        m_RestingDistance = Vector2.Distance(m_Balls [0].transform.position, m_Balls [1].transform.position);
     }
 
     public void UpdatePhysics()
@@ -23,8 +23,8 @@ public class Spring : MonoBehaviour
         var p1 = ( m_Balls[0].transform.position - m_Balls[1].transform.position ).normalized;
         var p2 = ( m_Balls[1].transform.position - m_Balls[0].transform.position ).normalized;
 
-        var x1 = ( x - m_Distance ) * p2;
-        var x2 = ( x - m_Distance ) * p1;
+        var x1 = ( x - m_RestingDistance ) * p2;
+        var x2 = ( x - m_RestingDistance ) * p1;
 
         var force1 = -m_K * x1;
         var force2 = -m_K * x2;
